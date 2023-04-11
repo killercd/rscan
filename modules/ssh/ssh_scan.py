@@ -23,6 +23,31 @@ class SSHScan():
         self.timeout = int(parser.get("ssh_scan", "timeout"))
         self.forced_exit = False
         self.thread_list = {}
+    
+    def __init__(self, 
+                iprange, 
+                user_ssh_file, 
+                pass_ssh_file, 
+                ssh_linux_shellcode,
+                ssh_port,
+                max_thread,
+                timeout,
+                verbose
+                ):
+        
+        self.iprange = iprange
+        self.user_ssh_file = user_ssh_file
+        self.pass_ssh_file = pass_ssh_file
+        self.user_list = []
+        self.pass_list = []
+        self.ssh_linux_shellcode = ssh_linux_shellcode
+        self.ssh_port = int(ssh_port)
+        self.max_thread = int(max_thread)
+        self.timeout = int(timeout)
+        self.forced_exit = False
+        self.thread_list = {}
+        self.verbose = verbose
+
 
     def _loadDictionary(self):
         ff = open(self.user_ssh_file, 'r')
@@ -32,6 +57,7 @@ class SSHScan():
         ff = open(self.pass_ssh_file, 'r')
         self.pass_list = ff.readlines()
         ff.close()
+
     def stop(self):
         self.forced_exit = True
     
@@ -84,11 +110,11 @@ class SSHScan():
             counter = counter+1
 
         while len(self.thread_list)>0:
-            print("Waiting for threadings ends...")
             time.sleep(3)
         print("Done!")
 
     def _scan_ip(self, ip):
+        
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
@@ -108,9 +134,7 @@ class SSHScan():
             return
         finally:
             connSkt.close()
-            
-    
-
+        
         for user in self.user_list:
             if self.forced_exit:
                 return

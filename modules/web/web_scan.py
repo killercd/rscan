@@ -24,12 +24,35 @@ class WebScan():
         self.thread_list = {}
         self.folderlist = parser.get("web_scan", "folderlist").split(",")
         self.filters = parser.get("web_scan", "filter").split(",")
-        self.filterDict = {}
+        self.filter_dict = {}
         
         for filterRegex in self.filters:
             field, value = filterRegex.split(":")
-            self.filterDict[field] = value
+            self.filter_dict[field] = value
 
+    def __init__(self, 
+                 iprange, 
+                 ports, 
+                 max_thread, 
+                 timeout,
+                 verbose
+                 ):
+        
+        
+        self.iprange = iprange
+        self.ports = ports
+        self.max_thread=int(max_thread)
+        self.timeout = int(timeout)
+        self.forced_exit = False
+        self.thread_list = {}
+        self.folder_list = "panel,admin,login,uploads,upload".split(",")
+        self.filters = "title:Configurator".split(",")
+        self.filter_dict = {}
+        self.verbose = verbose
+
+        for filterRegex in self.filters:
+            field, value = filterRegex.split(":")
+            self.filter_dict[field] = value
 
     def _incIP(self,ip):
         a,b,c,d = ip.split(".")
@@ -83,8 +106,8 @@ class WebScan():
                 pass
 
     def extract_page_info(self,ip,port):
-        if "title" in self.filterDict:
-            titleFilter = self.filterDict["title"]
+        if "title" in self.filter_dict:
+            titleFilter = self.filter_dict["title"]
         else:
             titleFilter = "*."
         html_content = requests.get("http://{}:{}".format(ip,str(port))).text
@@ -107,8 +130,12 @@ class WebScan():
             
 
     def _scan_ip(self, ip):
+        
         port = int(self.ports[0])
         connSkt = None
+        
+        if self.verbose:
+            print("[?] Checking {}:{}".format(ip,str(port)))
 
         
         try:
@@ -129,7 +156,6 @@ class WebScan():
             
             print("[+] {}:{} open (Server: {})".format(ip,port, server))
             
-           
             self.reverse_dns(ip)
             self.extract_page_info(ip,port)
             self.robots(ip,port)
